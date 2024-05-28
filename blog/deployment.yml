@@ -97,7 +97,10 @@ spec:
           - name: ssl
             value: "require"
           - name: database__connection__user
-            value: ghost_user
+            valueFrom:
+              secretKeyRef:
+                name: ghost-pass
+                key: database_user
           - name: database__connection__password
             valueFrom:
               secretKeyRef:
@@ -139,16 +142,10 @@ spec:
         volumeMounts:
           - name: ghost-persistent-storage
             mountPath: /var/www/html
-          - name: rds-ca-cert
-            mountPath: /etc/ssl/certs/rds
-            readOnly: true
       volumes:
         - name: ghost-persistent-storage
           persistentVolumeClaim:
             claimName: ghost-pv-claim
-        - name: rds-ca-cert
-          secret:
-            secretName: rds-ca-cert 
 ---
 apiVersion: v1
 kind: Service
