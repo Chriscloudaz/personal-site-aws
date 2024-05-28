@@ -1,0 +1,211 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: ghost-pv
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ghost-app-volume
+  hostPath:
+    path: /mnt/data
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ghost-pv-claim
+  labels:
+    app: ghost
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ghost-app-volume
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blog-deployment
+  labels:
+    app: ghost
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ghost
+      tier: frontend
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: ghost
+        tier: frontend
+    spec:
+      containers:
+      - image: ghost:latest
+        name: website
+        imagePullPolicy: Always
+        ports:
+          - name: http
+            containerPort: 2368
+            protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /ghost/api/admin/site/
+            port: http
+            httpHeaders:
+              - name: X-Forwarded-Proto
+                value: https
+        livenessProbe:
+          initialDelaySeconds: 60
+          httpGet:
+            path: /ghost/api/admin/site/
+            port: http
+            httpHeaders:
+              - name: X-Forwarded-Proto
+                value: https
+        resources:
+          requests:
+            memory: '128Mi'
+            cpu: '100m'
+          limits:
+            memory: '256Mi'
+            cpu: '150m'
+        env:
+          - name: NODE_ENV
+            value: production
+          - name: database__client
+            value: mysql
+          - name: database__connection__host
+            valueFrom:
+              secretKeyRef:
+                name: ghost-pass
+                key: database_host
+          - name: database__connection__port
+            valueFrom:
+              secretKeyRef:
+                name: ghost-pass
+                key: database_port
+          - name: ssl
+            value: "require"
+          - name: database__connection__user
+            value: ghost_user
+          - name: database__connection__password
+            valueFrom:
+              secretKeyRef:
+                name: ghost-pass
+                key: userpassword
+          - name: database__connection__database
+            value: ghost_db
+          - name: logging__transports
+            value: '["stdout"]'
+          - name: logging__level
+            value: info
+          - name: url
+            value: https://blog.parbtechsolutions.com
+          - name: mail__transport
+            value: SMTP
+          - name: mail__from
+            valueFrom:
+              secretKeyRef:
+                name: ghost-pass
+                key: mail_from
+          - name: mail__options__service
+            value: Mailgun
+          - name: mail__options__host
+            value: smtp.eu.mailgun.org
+          - name: mail__options__port
+            value: "587"
+          - name: mail__options__secure
+            value: "false"
+          - name: mail__options__auth__user
+            valueFrom:
+              secretKeyRef:
+                name: ghost-pass
+                key: smtp_username
+          - name: mail__options__auth__pass
+            valueFrom:
+              secretKeyRef:
+                name: ghost-pass
+                key: smtp_password
+        volumeMounts:
+          - name: ghost-persistent-storage
+            mountPath: /var/www/html
+          - name: rds-ca-cert
+            mountPath: /etc/ssl/certs/rds
+            readOnly: true
+      volumes:
+        - name: ghost-persistent-storage
+          persistentVolumeClaim:
+            claimName: ghost-pv-claim
+        - name: rds-ca-cert
+          secret:
+            secretName: rds-ca-cert 
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ghost-service
+  labels:
+    app: ghost
+spec:
+  type: ClusterIP
+  selector:
+    app: ghost
+    tier: frontend
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 2368
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: blog-deployment
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: blog-deployment
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: blog-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: "blog.parbtechsolutions.com"
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: ghost-service
+            port:
+              number: 2368
+  tls:
+  - hosts: 
+    - blog.parbtechsolutions.com
+    secretName: blog-tls
