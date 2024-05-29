@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: main-site
-          image: 879132841444.dkr.ecr.eu-north-1.amazonaws.com/parbtech:eecde2a24baed031a71fc986044d77461b004760
+          image: 879132841444.dkr.ecr.eu-north-1.amazonaws.com/parbtech:IMAGE_TAG_PLACEHOLDER
           ports:
             - containerPort: 80
           resources:
