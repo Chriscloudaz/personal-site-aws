@@ -113,7 +113,7 @@ spec:
           - name: logging__level
             value: info
           - name: url
-            value: https://blog.parbtechsolutions.com
+            value: https://awsblog.parbtechsolutions.com
           - name: mail__transport
             value: SMTP
           - name: mail__from
