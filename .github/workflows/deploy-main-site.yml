@@ -38,7 +38,7 @@ jobs:
       uses: azure/setup-kubectl@v1
 
     - name: Load AWS EKS credentials
-      run: aws eks update-kubeconfig --name eks-cluster  --region eu-north-1
+      run: aws eks update-kubeconfig --name parbtechsolutions-eks  --region eu-north-1
 
     - name: Update Deployment Image 
       run: |
