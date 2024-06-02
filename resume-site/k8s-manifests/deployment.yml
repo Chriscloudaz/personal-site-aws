@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: resume
-          image: 879132841444.dkr.ecr.eu-north-1.amazonaws.com/parbtech-resume:IMAGE_TAG_PLACEHOLDER
+          image: 879132841444.dkr.ecr.eu-north-1.amazonaws.com/parbtech-resume:eecde2a24baed031a71fc986044d77461b004760
           ports:
             - containerPort: 80
           resources:
@@ -71,7 +71,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: "resume.parbtechsolutions.com"
+  - host: "awsresume.parbtechsolutions.com"
     http:
       paths:
       - pathType: Prefix
@@ -83,5 +83,5 @@ spec:
               number: 80
   tls:
   - hosts: 
-    - resume.parbtechsolutions.com
+    - awsresume.parbtechsolutions.com
     secretName: resume-tls
