@@ -192,7 +192,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: "blog.parbtechsolutions.com"
+  - host: "awsblog.parbtechsolutions.com"
     http:
       paths:
       - pathType: Prefix
@@ -204,5 +204,5 @@ spec:
               number: 2368
   tls:
   - hosts: 
-    - blog.parbtechsolutions.com
+    - awsblog.parbtechsolutions.com
     secretName: blog-tls
