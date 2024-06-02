@@ -45,7 +45,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: "games.parbtechsolutions.com"
+  - host: "awsgames.parbtechsolutions.com"
     http:
       paths:
       - pathType: Prefix
@@ -57,5 +57,5 @@ spec:
               number: 80
   tls:
   - hosts: 
-    - games.parbtechsolutions.com
+    - awsgames.parbtechsolutions.com
     secretName: games-tls
