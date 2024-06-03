@@ -11,7 +11,7 @@ spec:
     type: RollingUpdate
     rollingUpdate:
       maxUnavailable: 0
-      maxSurge: 1
+      maxSurge: 2
   template:
     metadata:
       labels:
@@ -35,7 +35,7 @@ kind: Service
 metadata:
   name: main-site-service
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     name: main-site
   ports:
@@ -71,7 +71,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: "aws.parbtechsolutions.com"
+  - host: "success.parbtechsolutions.com"
     http:
       paths:
       - pathType: Prefix
@@ -83,5 +83,5 @@ spec:
               number: 80
   tls:
   - hosts: 
-    - aws.parbtechsolutions.com
+    - success.parbtechsolutions.com
     secretName: main-site-tls
